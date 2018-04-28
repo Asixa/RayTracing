@@ -1,0 +1,5 @@
+﻿/.vs
+/RayTracing/bin
+/RayTracing/obj
+*.exe
+*.pdb
