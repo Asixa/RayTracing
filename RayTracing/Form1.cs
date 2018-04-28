@@ -12,7 +12,7 @@ namespace RayTracing
     public partial class Form1 : Form
     {
 
-        private Mode mode = Mode.NormalMap;
+        private Mode mode = Mode.Diffusing;
         private readonly Bitmap buff;
         private readonly HitableList hitableList = new HitableList();
         private const int Samples = 32;
