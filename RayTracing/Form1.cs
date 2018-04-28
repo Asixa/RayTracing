@@ -11,10 +11,11 @@ namespace RayTracing
 {
     public partial class Form1 : Form
     {
-        public static Form1 main;
+
+        private Mode mode = Mode.NormalMap;
         private readonly Bitmap buff;
         private readonly HitableList hitableList = new HitableList();
-        private const int Samples = 1;
+        private const int Samples = 32;
 
         private readonly System.Timers.Timer main_timer;
         private int seconds = 0;
@@ -22,9 +23,7 @@ namespace RayTracing
         private int Width = 512, Height = 512;
         public Form1()
         {
-
             ClientSize = new Size(Width, Height);
-            main = this;
             InitializeComponent();
             buff = new Bitmap(Width, Height);
             hitableList.list.Add(new Sphere(new Vector3(0, 0, -1), 0.5f));
@@ -69,15 +68,22 @@ namespace RayTracing
             {
                 var color = new Color32(0, 0, 0, 0);
                 for (var s = 0; s < Samples; s++)
-                    color += Diffusing(camera.CreateRay((i + Random.Range(0, 1f)) * recip_width,
-                        (j + Random.Range(0, 1f)) * recip_height), hitableList);
+                    color += mode == Mode.Diffusing
+                        ? Diffusing(camera.CreateRay(
+                            (i + Random.Range(0, 1f)) * recip_width,
+                            (j + Random.Range(0, 1f)) * recip_height), hitableList)
+                        : NormalMap(camera.CreateRay(
+                            (i + Random.Range(0, 1f)) * recip_width,
+                            (j + Random.Range(0, 1f)) * recip_height), hitableList);
                 color /= Samples;
                 color *= 1f;
                 buff.SetPixel(i, Height - j - 1, color.ToSystemColor());
             }
+
             return 0;
         }
-        private Color32 Antialiasing(Ray ray, HitableList hitableList)
+
+        private Color32 NormalMap(Ray ray, HitableList hitableList)
         {
             var record = new HitRecord();
             if (hitableList.Hit(ray, 0f, float.MaxValue, ref record))
@@ -99,5 +105,11 @@ namespace RayTracing
             var t = 0.5f * ray.normalDirection.y + 1f;
             return (1 - t) * new Color32(1, 1, 1) + t * new Color32(0.5f, 0.7f, 1);
         }
+
+        enum Mode
+        {
+            NormalMap,
+            Diffusing
+        };
     }
 }
