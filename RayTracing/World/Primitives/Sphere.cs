@@ -6,11 +6,12 @@ namespace RayTracing.World.Primitives
     {
         public Vector3 center;
         public float radius;
-
-        public Sphere(Vector3 cen, float rad)
+        public Material material;
+        public Sphere(Vector3 cen, float rad,Material m)
         {
             center = cen;
             radius = rad;
+            material = m;
         }
 
         public override bool Hit(Ray ray, float t_min, float t_max, ref HitRecord rec)
@@ -22,8 +23,10 @@ namespace RayTracing.World.Primitives
             var discriminant = b * b - 4 * a * c;
             if (!(discriminant > 0)) return false;
             var temp = (-b - Mathf.Sqrt(discriminant)) / a * 0.5f;
+            
             if (temp < t_max && temp > t_min)
             {
+                rec.material = material;
                 rec.t = temp;
                 rec.p = ray.GetPoint(rec.t);
                 rec.normal = (rec.p - center).Normalized();
@@ -32,6 +35,7 @@ namespace RayTracing.World.Primitives
 
             temp = (-b + Mathf.Sqrt(discriminant)) / a * 0.5f;
             if (!(temp < t_max) || !(temp > t_min)) return false;
+            rec.material = material;
             rec.t = temp;
             rec.p = ray.GetPoint(rec.t);
             rec.normal = (rec.p - center).Normalized();

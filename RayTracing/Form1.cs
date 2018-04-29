@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using RayTracing.Math;
 using RayTracing.World;
+using RayTracing.World.Materials;
 using RayTracing.World.Primitives;
 using Random=RayTracing.Math.Random;
 
@@ -15,7 +16,7 @@ namespace RayTracing
         private Mode mode = Mode.Diffusing;
         private readonly Bitmap buff;
         private readonly HitableList hitableList = new HitableList();
-        private const int Samples = 32;
+        private const int Samples =2, MAX_SCATTER_TIME = 8;
 
         private readonly System.Timers.Timer main_timer;
         private int seconds = 0;
@@ -26,8 +27,10 @@ namespace RayTracing
             ClientSize = new Size(Width, Height);
             InitializeComponent();
             buff = new Bitmap(Width, Height);
-            hitableList.list.Add(new Sphere(new Vector3(0, 0, -1), 0.5f));
-            hitableList.list.Add(new Sphere(new Vector3(0, -100.5f, -1), 100f));
+            hitableList.list.Add(new Sphere(new Vector3(0, 0, -1), 0.5f, new Lambertian(new Color32(0.8f, 0.3f, 0.3f))));
+            hitableList.list.Add(new Sphere(new Vector3(0, -100.5f, -1), 100f,new Metal(new Color32(0.3f, 0.3f, 0.6f), 0.2f)));
+            hitableList.list.Add(new Sphere(new Vector3(1, 0, -1), 0.5f,new Metal(new Color32(0.8f, 0.8f, 0.8f), 0.2f)));
+            hitableList.list.Add(new Sphere(new Vector3(-1, 0, -1), 0.5f, new Dielectirc(20f)));
             main_timer = new System.Timers.Timer(1000)
             {
                 AutoReset = true,
@@ -56,11 +59,7 @@ namespace RayTracing
 
         private int Scan()
         {
-            var low_left_corner = new Vector3(-1, -1, -1);
-            var horizontal = new Vector3(2, 0, 0);
-            var vertical = new Vector3(0, 2, 0);
-            var original = new Vector3(0, 0, 0);
-            var camera = new Camera(low_left_corner, horizontal, vertical, original);
+            var camera = new Camera(new Vector3(0,0,1),new Vector3(0,0,-1),new Vector3(0,1,0),75,1);
             var recip_width = 1f / Width;
             var recip_height = 1f / Height;
             for (j = 0; j <Height; j++)
@@ -71,7 +70,7 @@ namespace RayTracing
                     color += mode == Mode.Diffusing
                         ? Diffusing(camera.CreateRay(
                             (i + Random.Range(0, 1f)) * recip_width,
-                            (j + Random.Range(0, 1f)) * recip_height), hitableList)
+                            (j + Random.Range(0, 1f)) * recip_height), hitableList,0)
                         : NormalMap(camera.CreateRay(
                             (i + Random.Range(0, 1f)) * recip_width,
                             (j + Random.Range(0, 1f)) * recip_height), hitableList);
@@ -92,16 +91,24 @@ namespace RayTracing
             return (1 - t) * new Color32(1, 1, 1) + t * new Color32(0.5f, 0.7f, 1);
         }
 
-        private Color32 Diffusing(Ray ray, HitableList hitableList)
+        private Color32 Diffusing(Ray ray, HitableList hitableList, int depth)
         {
-            Vector3 GetRandomPIU()
-            {
-                var p = new Vector3(Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f)) * 2 - Vector3.one;
-                return p.Normalized() * Random.Range(0f, 1f);
-            }
             var record = new HitRecord();
             if (hitableList.Hit(ray, 0.0001f, float.MaxValue, ref record))
-                return 0.9f * Diffusing(new Ray(record.p, record.p + record.normal + GetRandomPIU() - record.p),hitableList);
+            {
+                var r = new Ray(Vector3.zero, Vector3.zero);
+                var attenuation = Color32.black;
+                if (depth < MAX_SCATTER_TIME && record.material.scatter(ray, record, ref attenuation, ref r))
+                {
+                    var c = Diffusing(r, hitableList, depth + 1);
+                    return new Color32(c.r * attenuation.r, c.g * attenuation.g, c.b * attenuation.b);
+                }
+                else
+                {
+                    return Color32.black;
+                }
+            }
+
             var t = 0.5f * ray.normalDirection.y + 1f;
             return (1 - t) * new Color32(1, 1, 1) + t * new Color32(0.5f, 0.7f, 1);
         }

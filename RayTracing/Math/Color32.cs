@@ -44,6 +44,7 @@ namespace RayTracing.Math
 
         public static Color32 Lerp(Color32 a, Color32 b, float t)=>new Color32(a.r + (b.r - a.r) * t, a.g + (b.g - a.g) * t, a.b + (b.b - a.b) * t,a.a + (b.a - a.a) * t);
         
+        public static Color32 black=new Color32(0,0,0),white=new Color32(1,1,1);
     }
 }
 

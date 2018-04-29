@@ -37,8 +37,6 @@
             resources.ApplyResources(this, "$this");
             this.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
-            this.MaximizeBox = false;
-            this.MinimizeBox = false;
             this.Name = "Form1";
             this.ResumeLayout(false);
 

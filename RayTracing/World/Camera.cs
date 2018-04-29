@@ -5,14 +5,22 @@ namespace RayTracing.World
 {
     class Camera
     {
-        readonly Vector3 low_left_corner,horizontal,vertical,original;
-        public Camera(Vector3 l,Vector3 h,Vector3 v,Vector3 o)
+        public Vector3 position,lowLeftCorner,horizontal,vertical;
+
+        public Camera(Vector3 lookFrom, Vector3 lookat, Vector3 vup, float vfov, float aspect)
         {
-            low_left_corner = l;
-            horizontal = h;
-            vertical = v;
-            original = o;
+            float unitAngle = Mathf.PI / 180f * vfov;
+            float halfHeight = Mathf.Tan(unitAngle * 0.5f);
+            float halfWidth = aspect * halfHeight;
+            position = lookFrom;
+            Vector3 w = (lookat - lookFrom).Normalized();
+            Vector3 u = Vector3.Cross(vup, w).Normalized();
+            Vector3 v = Vector3.Cross(w, u).Normalized();
+            lowLeftCorner = lookFrom + w - halfWidth * u - halfHeight * v;
+            horizontal = 2 * halfWidth * u;
+            vertical = 2 * halfHeight * v;
         }
-        public Ray CreateRay(float x, float y) => new Ray(original,low_left_corner + horizontal * x  + vertical * y);
+        public Ray CreateRay(float u, float v) =>
+            new Ray(position, lowLeftCorner + u * horizontal + v * vertical - position);
     }
 }

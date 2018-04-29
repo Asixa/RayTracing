@@ -8,3 +8,6 @@ This is a simple ray tracing renderer using winform and GDI
 
 ## NormalMap
 ![Screenshot](https://github.com/Asixa/RayTracing/blob/master/Assets/Screenshot4.png?raw=true "Screenshot")
+
+## Material
+![Screenshot](https://github.com/Asixa/RayTracing/blob/master/Assets/Screenshot5.png?raw=true "Screenshot")
